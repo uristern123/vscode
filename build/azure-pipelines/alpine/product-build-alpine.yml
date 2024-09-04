@@ -74,6 +74,17 @@ steps:
 
   - script: |
       set -e
+
+      # V8 >= 12.8 requies C++20 or later
+      # current headers shipped from Electron are missing
+      # https://github.com/nodejs/node/commit/c7e42092f34f019fa0c4d9a2d0d49719af2f5daa
+      # Following is a workaround until the headers are fixed in upstream.
+      if [ "$(g++ -dumpversion)" -lt 10 ]; then
+        export CXXFLAGS="-std=gnu++2a"
+      else
+        export CXXFLAGS="-std=gnu++20"
+      fi
+
       for i in {1..5}; do # try 5 times
         yarn --frozen-lockfile --check-files && break
         if [ $i -eq 5 ]; then
@@ -89,7 +100,7 @@ steps:
       GITHUB_TOKEN: "$(github-distro-mixin-password)"
       VSCODE_REMOTE_DEPENDENCIES_CONTAINER_NAME: vscodehub.azurecr.io/vscode-linux-build-agent:alpine-$(VSCODE_ARCH)
       VSCODE_HOST_MOUNT: "/mnt/vss/_work/1/s"
-    displayName: Install build dependencies
+    displayName: Install dependencies
     condition: and(succeeded(), ne(variables.NODE_MODULES_RESTORED, 'true'))
 
   - script: node build/azure-pipelines/distro/mixin-npm
