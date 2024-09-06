@@ -9,7 +9,7 @@ import { BugIndicatingError, onUnexpectedError } from '../../../../base/common/e
 import { Event } from '../../../../base/common/event.js';
 import { toDisposable } from '../../../../base/common/lifecycle.js';
 import { IObservable, ITransaction, autorun, autorunWithStore, derived, disposableObservableValue, observableFromEvent, observableValue, recomputeInitiallyAndOnChange, subtransaction, transaction } from '../../../../base/common/observable.js';
-import { derivedDisposable } from '../../../../base/common/observableInternal/derived.js';
+import { derivedDisposable } from '../../../../base/common/observable.js';
 import './style.css';
 import { IEditorConstructionOptions } from '../../config/editorConfiguration.js';
 import { ICodeEditor, IDiffEditor, IDiffEditorConstructionOptions } from '../../editorBrowser.js';
