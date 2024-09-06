@@ -19,6 +19,8 @@ import { createRequire } from 'node:module';
 
 /** @ts-ignore */
 const require = createRequire(import.meta.url);
+const Module = require('module');
+
 /** @type any */
 const module = { exports: {} };
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -208,28 +210,26 @@ module.exports.configurePortable = function (product) {
  * Helper to enable ASAR support.
  */
 module.exports.enableASARSupport = function () {
-	// ESM-comment-begin
-	// const NODE_MODULES_PATH = path.join(__dirname, '../node_modules');
-	// const NODE_MODULES_ASAR_PATH = `${NODE_MODULES_PATH}.asar`;
-	//
-	// // @ts-ignore
-	// const originalResolveLookupPaths = Module._resolveLookupPaths;
-	//
-	// // @ts-ignore
-	// Module._resolveLookupPaths = function (request, parent) {
-	// const paths = originalResolveLookupPaths(request, parent);
-	// if (Array.isArray(paths)) {
-	// for (let i = 0, len = paths.length; i < len; i++) {
-	// if (paths[i] === NODE_MODULES_PATH) {
-	// paths.splice(i, 0, NODE_MODULES_ASAR_PATH);
-	// break;
-	// }
-	// }
-	// }
-	//
-	// return paths;
-	// };
-	// ESM-comment-end
+	const NODE_MODULES_PATH = path.join(__dirname, '../node_modules');
+	const NODE_MODULES_ASAR_PATH = `${NODE_MODULES_PATH}.asar`;
+
+	// @ts-ignore
+	const originalResolveLookupPaths = Module._resolveLookupPaths;
+
+	// @ts-ignore
+	Module._resolveLookupPaths = function (request, parent) {
+		const paths = originalResolveLookupPaths(request, parent);
+		if (Array.isArray(paths)) {
+			for (let i = 0, len = paths.length; i < len; i++) {
+				if (paths[i] === NODE_MODULES_PATH) {
+					paths.splice(i, 0, NODE_MODULES_ASAR_PATH);
+					break;
+				}
+			}
+		}
+
+		return paths;
+	};
 };
 
 /**

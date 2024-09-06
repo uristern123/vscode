@@ -40,8 +40,10 @@ async function start() {
 	// @ts-ignore
 	bootstrapNode.configurePortable(product);
 
-	// Enable ASAR support
-	bootstrapNode.enableASARSupport();
+	// ESM-comment-begin
+	// // Enable ASAR support
+	// bootstrapNode.enableASARSupport();
+	// ESM-comment-end
 
 	// Signal processes that we got launched as CLI
 	process.env['VSCODE_CLI'] = '1';

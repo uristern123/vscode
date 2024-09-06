@@ -49,8 +49,10 @@ perf.mark('code/didStartMain');
 // Enable portable support
 const portable = bootstrapNode.configurePortable(product);
 
-// Enable ASAR support
-bootstrapNode.enableASARSupport();
+// ESM-comment-begin
+// // Enable ASAR support
+// bootstrapNode.enableASARSupport();
+// ESM-comment-end
 
 // ESM-comment-begin
 // const minimist = require('minimist'); // !!! IMPORTANT: MUST come after bootstrap#enableASARSupport
