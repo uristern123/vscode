@@ -74,7 +74,7 @@
   "dependencies": {
     "@microsoft/1ds-core-js": "^3.2.13",
     "@microsoft/1ds-post-js": "^3.2.13",
-    "@bpasero/watcher": "https://github.com/bpasero/watcher.git#ef113d4b53b7c67568f3952a860d4bb73d9dc62a",
+    "@bpasero/watcher": "https://github.com/bpasero/watcher.git#3bb5d8bf563bc9f1529b2a8febf4b6cfb21f68f5",
     "@vscode/deviceid": "^0.1.1",
     "@vscode/iconv-lite-umd": "0.7.0",
     "@vscode/policy-watcher": "^1.1.4",
