@@ -86,9 +86,9 @@ flakySuite('Native Modules (all platforms)', () => {
 		assert.ok(typeof spdlog.version === 'number', testErrorMessage('@vscode/spdlog'));
 	});
 
-	test('@parcel/watcher', async () => {
-		const parcelWatcher = await import('@parcel/watcher');
-		assert.ok(typeof parcelWatcher.subscribe === 'function', testErrorMessage('@parcel/watcher'));
+	test('@bpasero/watcher', async () => {
+		const parcelWatcher = await import('@bpasero/watcher');
+		assert.ok(typeof parcelWatcher.subscribe === 'function', testErrorMessage('@bpasero/watcher'));
 	});
 
 	test('@vscode/deviceid', async () => {
