@@ -13,8 +13,9 @@ module.exports = withDefaults({
 	context: __dirname,
 	entry: {
 		extension: './src/ipynbMain.ts',
+		notebookSerializerWorker: './src/notebookSerializerWorker.ts',
 	},
 	output: {
-		filename: 'ipynbMain.js'
+		filename: '[name].js'
 	}
 });
