@@ -28,6 +28,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 Error.stackTraceLimit = 100;
 
 if (!process.env['VSCODE_HANDLES_SIGPIPE']) {
+	console.log("test")
 	// Workaround for Electron not installing a handler to ignore SIGPIPE
 	// (https://github.com/electron/electron/issues/13254)
 	let didLogAboutSIGPIPE = false;
