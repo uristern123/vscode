@@ -22,6 +22,8 @@ import { IEnvironmentService } from '../../../../platform/environment/common/env
 import { canASAR } from '../../../../base/common/amd.js';
 import { CancellationError, isCancellationError } from '../../../../base/common/errors.js';
 import { PromiseResult } from '../../../../base/common/observableInternal/promise.js';
+import { Position } from '../../../common/core/position.js';
+import { Range } from '../../../common/core/range.js';
 
 const EDITOR_TREESITTER_TELEMETRY = 'editor.experimental.treeSitterTelemetry';
 const MODULE_LOCATION_SUBPATH = `@vscode/tree-sitter-wasm/wasm`;
@@ -151,8 +153,13 @@ export class TreeSitterParseResult implements IDisposable, ITreeSitterParseResul
 	private _newEdits = true;
 	private _applyEdits(model: ITextModel, changes: IModelContentChange[]) {
 		for (const change of changes) {
-			const newEndOffset = change.rangeOffset + change.text.length;
-			const newEndPosition = model.getPositionAt(newEndOffset);
+			const startingPositionLine = change.range.startLineNumber;
+			const startingPositionCharacter = change.range.startColumn;
+			const lines = change.text.split(/\r?\n/g);
+			const newEndPosition = new Position(
+				startingPositionLine + lines.length - 1,
+				(lines.length > 1) ? lines.pop()!.length : startingPositionCharacter
+			);
 
 			this.tree?.edit({
 				startIndex: change.rangeOffset,
@@ -184,15 +191,23 @@ export class TreeSitterParseResult implements IDisposable, ITreeSitterParseResul
 	private async _parseAndYield(model: ITextModel, parseType: TelemetryParseType): Promise<Parser.Tree | undefined> {
 		const language = model.getLanguageId();
 		let tree: Parser.Tree | undefined;
+		let oldTree = this.tree?.copy();
 		let time: number = 0;
 		let passes: number = 0;
 		this._newEdits = false;
+		this._logService.debug(`TreeSitter: Starting parse for ${model.uri.toString()}`);
+
+		const isTreeEmpty = () => {
+			return (tree?.rootNode.childCount === 0) && model.getValueLength() > 0;
+		};
+
 		do {
 			const timer = performance.now();
 			try {
-				tree = this.parser.parse((index: number, position?: Parser.Point) => this._parseCallback(model, index), this.tree);
+				tree = this.parser.parse((index: number, position?: Parser.Point) => this._parseCallback(model, index), oldTree);
 			} catch (e) {
 				// parsing can fail when the timeout is reached, will resume upon next loop
+				this._logService.debug('Error parsing tree-sitter tree', e);
 			} finally {
 				time += performance.now() - timer;
 				passes++;
@@ -202,7 +217,13 @@ export class TreeSitterParseResult implements IDisposable, ITreeSitterParseResul
 			await new Promise<void>(resolve => setTimeout0(resolve));
 
 			if (model.isDisposed() || this.isDisposed) {
-				return;
+				break;
+			}
+			if (isTreeEmpty()) {
+				// Something has gone horribly wrong
+				oldTree = undefined;
+				tree = undefined;
+				this.parser.reset();
 			}
 		} while (!tree && !this._newEdits); // exit if there a new edits, as anhy parsing done while there are new edits is throw away work
 		this.sendParseTimeTelemetry(parseType, language, time, passes);
@@ -210,7 +231,16 @@ export class TreeSitterParseResult implements IDisposable, ITreeSitterParseResul
 	}
 
 	private _parseCallback(textModel: ITextModel, index: number): string | null {
-		return textModel.getTextBuffer().getNearestChunk(index);
+		const chunk = textModel.getTextBuffer().getNearestChunk(index);
+		const position = textModel.getPositionAt(index);
+		if (position.lineNumber < textModel.getLineCount()) {
+			const range = new Range(position.lineNumber, position.column, (position.lineNumber + 1), position.column);
+			const text = textModel.getValueInRange(range);
+			this._logService.debug(`TreeSitter: Requested chunk for ${textModel.uri.toString()} at ${index} and got "${chunk.substring(0, 20)}" (length ${chunk.length}) for actual text "${text}"`);
+		} else {
+			this._logService.debug(`TreeSitter: Requested chunk for ${textModel.uri.toString()} at ${index} and got "${chunk.substring(0, 20)}" (length ${chunk.length})`);
+		}
+		return chunk;
 	}
 
 	private sendParseTimeTelemetry(parseType: TelemetryParseType, languageId: string, time: number, passes: number): void {
